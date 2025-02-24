@@ -16,6 +16,10 @@ const router = createBrowserRouter([
         path: "/auth/google-success",
         element: <GoogleRedirectPage />,
     },
+    {
+        path: "/lobby",
+        element: <div>Sudah login ya</div>,
+    },
 ]);
 
 export { router };
