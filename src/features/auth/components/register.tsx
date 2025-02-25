@@ -3,11 +3,17 @@ import { AuthLayout } from "./layout.auth";
 import { Helmet } from "react-helmet";
 import { ChangeEvent, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 export const Register = () => {
+    // Navigation
+    const navigate = useNavigate();
+
     // URL
     const [searchParam, setSearchParam] = useSearchParams();
+    const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     // State
     const [idPegawaiValue, setIdPegawaiValue] = useState<string>("");
@@ -21,6 +27,42 @@ export const Register = () => {
         }
 
         setIdPegawaiValue(current);
+    };
+
+    const handleSubmit = async () => {
+        const payload = {
+            code: searchParam.get("code"),
+            pegawaiId: idPegawaiValue,
+        };
+
+        try {
+            setIsLoading(true);
+
+            const response = await fetch(
+                "http://localhost:3001/api/auth/token-request",
+                {
+                    method: "POST",
+                    body: JSON.stringify(payload),
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                },
+            );
+
+            // Add type
+            const result = await response.json();
+
+            // Store token to localstorage
+            localStorage.setItem("accessToken", result.data.accessToken);
+            localStorage.setItem("refreshToken", result.data.refreshToken);
+
+            // Navigate to success page
+            navigate("/auth/google-success");
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -43,8 +85,13 @@ export const Register = () => {
                             onChange={handleMaxLimit}
                         />
 
-                        <Button>Submit</Button>
+                        <Button onClick={handleSubmit} disabled={isLoading}>
+                            {isLoading && <Loader2 className="animate-spin" />}
+                            {isLoading ? "Processing" : "Submit"}
+                        </Button>
                     </div>
+
+                    {error && <p className="text-sm text-red-400">{error}</p>}
                 </>
             )}
 

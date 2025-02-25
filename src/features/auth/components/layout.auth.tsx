@@ -1,7 +1,19 @@
 import { BadgeAlert } from "lucide-react";
-import { PropsWithChildren } from "react";
+import { PropsWithChildren, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export const AuthLayout = ({ children }: PropsWithChildren) => {
+    // Navigation
+    const navigate = useNavigate();
+
+    // Effect
+    useEffect(() => {
+        // Redirect to lobby if user already has access token
+        if (localStorage.getItem("accessToken")) {
+            navigate("/lobby");
+        }
+    }, []);
+
     return (
         <div className="p-6 flex flex-col gap-2 h-screen">
             <div className="my-8 flex justify-center">

@@ -18,49 +18,29 @@ export const Login = () => {
     const [error, setError] = useState<string | null>(null);
 
     // Effect
-    useEffect(() => {
-        const handleMessage = async (event: MessageEvent) => {
-            if (event.data?.type === "LOGIN_STATUS") {
-                messageReceived.current = true;
-
-                try {
-                    await new Promise<number>((resolve, reject) => {
-                        setTimeout(() => {
-                            resolve(123);
-                            // reject("eror aja");
-                        }, 2000);
-                    });
-
-                    navigate("/lobby");
-                } catch (error) {
-                    console.error(error);
-                    setError(error as string);
-                } finally {
-                    setLoginState(false);
-                }
-
-                // Perform fetch request (customize endpoint and body)
-                // fetch("/your-endpoint", {
-                //     method: "POST",
-                //     headers: { "Content-Type": "application/json" },
-                //     body: JSON.stringify(event.data),
-                // })
-                //     .then((res) => {
-                //         if (!res.ok) throw new Error("Failed to send data");
-                //         return res.json();
-                //     })
-                //     .catch((err) => {
-                //         setError(err.message);
-                //     });
-            }
-        };
-
-        window.addEventListener("message", handleMessage);
-
-        return () => {
-            window.removeEventListener("message", handleMessage);
-        };
-    }, []);
+    // useEffect(() => {
+    //     const handleMessage = async (event: MessageEvent) => {
+    //         console.log(event.data);
+    //         if (event.data?.type === "LOGIN_SUCCESS") {
+    //             messageReceived.current = true;
+    //
+    //             try {
+    //                 navigate("/lobby");
+    //             } catch (error) {
+    //                 console.error(error);
+    //                 setError(error as string);
+    //             } finally {
+    //                 setLoginState(false);
+    //             }
+    //         }
+    //     };
+    //
+    //     window.addEventListener("message", handleMessage);
+    //
+    //     return () => {
+    //         window.removeEventListener("message", handleMessage);
+    //     };
+    // }, []);
 
     // Function
     const openWindow = async () => {
@@ -105,12 +85,16 @@ export const Login = () => {
 
         // Start interval to check if the window is force-closed
         const checkClosed = setInterval(() => {
-            if (!windowRef.current || windowRef.current.closed) {
+            if (!windowRef.current) {
                 clearInterval(checkClosed);
 
-                if (!messageReceived.current) {
+                // Check for accessToken
+                // Redirect to lobby if accesstoken already exists
+                if (!localStorage.getItem("accessToken")) {
                     setLoginState(false);
                     setError("Ada kesalahan saat proses login. Coba lagi.");
+                } else {
+                    navigate("/lobby");
                 }
             }
         }, 500);
