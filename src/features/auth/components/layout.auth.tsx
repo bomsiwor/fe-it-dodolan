@@ -7,12 +7,6 @@ export const AuthLayout = ({ children }: PropsWithChildren) => {
     const navigate = useNavigate();
 
     // Effect
-    useEffect(() => {
-        // Redirect to lobby if user already has access token
-        if (localStorage.getItem("accessToken")) {
-            navigate("/lobby");
-        }
-    }, []);
 
     return (
         <div className="p-6 flex flex-col gap-2 h-screen">

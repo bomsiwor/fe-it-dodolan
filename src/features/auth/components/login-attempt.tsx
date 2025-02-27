@@ -1,10 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { AuthLayout } from "./layout.auth";
 import { Helmet } from "react-helmet";
-import { ChangeEvent, useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Loader2 } from "lucide-react";
 
 export const LoginAttempt = () => {
     // Navigation
@@ -15,10 +13,21 @@ export const LoginAttempt = () => {
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
+    // State
+    const origin = window.opener; // Reference to the original window
+
     // Effect
     useEffect(() => {
+        if (!origin) {
+            setError("You don't belongs here");
+
+            return;
+        } // Ensure it's opened from another window
+
         const handleGetToken = async () => {
             try {
+                // Default success value is false
+                // succcessRef.current = false;
                 setIsLoading(true);
 
                 const payload = {
@@ -36,23 +45,33 @@ export const LoginAttempt = () => {
                     },
                 );
 
+                // Check for response
+                if (response.status !== 200) {
+                    window.close();
+                }
+
                 // Add type
                 const result = await response.json();
 
+                // Check for token
+                if (!result.data?.accessToken || !result.data?.refreshToken) {
+                    window.close();
+                }
+
                 // Store token to localstorage
-                localStorage.setItem("accessToken", result.data.accessToken);
-                localStorage.setItem("refreshToken", result.data.refreshToken);
+                localStorage.setItem("accessToken", result.data?.accessToken);
+                localStorage.setItem("refreshToken", result.data?.refreshToken);
 
                 // Navigate to success page
                 navigate("/auth/google-success");
             } catch (error) {
-                console.error(error);
-            } finally {
-                setIsLoading(false);
+                window.close();
             }
         };
 
         handleGetToken();
+
+        return () => {};
     }, []);
 
     // Function

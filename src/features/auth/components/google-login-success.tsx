@@ -32,8 +32,7 @@ export const GoogleRedirectPage = () => {
         const handleBeforeUnload = () => {
             origin.postMessage(
                 {
-                    type: "LOGIN_SUCCESS",
-                    payload: { data: null },
+                    success: true,
                 },
                 "*",
             );

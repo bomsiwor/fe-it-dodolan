@@ -1,9 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { AuthLayout } from "./layout.auth";
 import { Helmet } from "react-helmet";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
+interface ILoginResponse {
+    success: boolean;
+    error?: string;
+}
 
 export const Login = () => {
     // Navigation
@@ -11,40 +16,58 @@ export const Login = () => {
 
     // Ref
     const windowRef = useRef<Window | null>(null);
-    const messageReceived = useRef(false);
+    const checkIntervalRef = useRef<number | null>(null);
 
     // State
     const [loginState, setLoginState] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Callback
+    const cleanUp = useCallback(() => {
+        // Clear interval by its interval ID
+        // set interval ID from ref after clearing
+        if (checkIntervalRef.current !== null) {
+            window.clearInterval(checkIntervalRef.current);
+            checkIntervalRef.current = null;
+        }
+    }, []);
+
     // Effect
-    // useEffect(() => {
-    //     const handleMessage = async (event: MessageEvent) => {
-    //         console.log(event.data);
-    //         if (event.data?.type === "LOGIN_SUCCESS") {
-    //             messageReceived.current = true;
-    //
-    //             try {
-    //                 navigate("/lobby");
-    //             } catch (error) {
-    //                 console.error(error);
-    //                 setError(error as string);
-    //             } finally {
-    //                 setLoginState(false);
-    //             }
-    //         }
-    //     };
-    //
-    //     window.addEventListener("message", handleMessage);
-    //
-    //     return () => {
-    //         window.removeEventListener("message", handleMessage);
-    //     };
-    // }, []);
+    useEffect(() => {
+        // Redirect to lobby if user already has access token
+        // Run for first time only
+        if (localStorage.getItem("accessToken")) {
+            navigate("/lobby");
+            return;
+        }
+
+        // Add event listener to listen message
+        const handleMessage = (e: MessageEvent) => {
+            const data = e.data as ILoginResponse;
+
+            // Set error if data is not success and giving error
+            if (data.success) {
+                console.log("success");
+            } else {
+                setError(data.error || "Login gagal");
+            }
+
+            // Clear interval to prevent error collition
+            cleanUp();
+        };
+
+        window.addEventListener("message", handleMessage);
+
+        return () => {
+            window.removeEventListener("message", handleMessage);
+            cleanUp();
+        };
+    }, []);
 
     // Function
     const openWindow = async () => {
         setError(null);
+
         // Fetch backend to get google redirect URI
         let result: any;
 
@@ -71,9 +94,9 @@ export const Login = () => {
             return;
         }
 
-        messageReceived.current = false;
-
+        // Open new window if not window opened.
         if (!windowRef.current || windowRef.current.closed) {
+            // Set windowRef from opened window
             windowRef.current = window.open(
                 result.data.redirectUrl, // Open backend google login redirect
                 "google-login",
@@ -84,18 +107,14 @@ export const Login = () => {
         }
 
         // Start interval to check if the window is force-closed
-        const checkClosed = setInterval(() => {
-            if (!windowRef.current) {
-                clearInterval(checkClosed);
+        // or user manually closed window.
+        checkIntervalRef.current = window.setInterval(() => {
+            // Check for window is closed or not exists
+            if (windowRef.current && windowRef.current.closed) {
+                setError("Login gagal, jendela ditutup dini");
+                setLoginState(false);
 
-                // Check for accessToken
-                // Redirect to lobby if accesstoken already exists
-                if (!localStorage.getItem("accessToken")) {
-                    setLoginState(false);
-                    setError("Ada kesalahan saat proses login. Coba lagi.");
-                } else {
-                    navigate("/lobby");
-                }
+                cleanUp();
             }
         }, 500);
     };
