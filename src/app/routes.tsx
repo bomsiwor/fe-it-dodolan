@@ -10,12 +10,12 @@ const router = createBrowserRouter([
         element: <Login />,
     },
     {
-        path: "/register",
-        element: <Register />,
-    },
-    {
         path: "/login-attempt",
         element: <LoginAttempt />,
+    },
+    {
+        path: "/register",
+        element: <Register />,
     },
     {
         path: "/auth/google-success",

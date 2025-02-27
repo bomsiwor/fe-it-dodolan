@@ -1,22 +1,38 @@
 import { Button } from "@/components/ui/button";
 import { AuthLayout } from "./layout.auth";
 import { Helmet } from "react-helmet";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, MouseEvent, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { fetcher } from "@/utils/fetch";
+import { ITokens } from "../types/type.auth";
 
 export const Register = () => {
     // Navigation
     const navigate = useNavigate();
 
     // URL
-    const [searchParam, setSearchParam] = useSearchParams();
+    const [searchParam] = useSearchParams();
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     // State
+    const origin = window.opener;
     const [idPegawaiValue, setIdPegawaiValue] = useState<string>("");
+
+    // Effect
+    useEffect(() => {
+        // Ensure it's opened fron other window
+        if (!origin) {
+            setError("Tidak dapat melanjutkan proses.");
+            return;
+        }
+
+        if (!searchParam.get("code")) {
+            window.close();
+        }
+    }, [searchParam, origin]);
 
     // Function
     const handleMaxLimit = (event: ChangeEvent<HTMLInputElement>) => {
@@ -38,23 +54,21 @@ export const Register = () => {
         try {
             setIsLoading(true);
 
-            const response = await fetch(
-                "http://localhost:3001/api/auth/token-request",
-                {
-                    method: "POST",
-                    body: JSON.stringify(payload),
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
+            const response = await fetcher<ITokens>("", "POST", {
+                body: payload,
+            });
 
-            // Add type
-            const result = await response.json();
+            // Check for token
+            if (!response.data.accessToken || !response.data.refreshToken) {
+                setError(
+                    "Proses registrasi tidak dapat dilanjutkan. Coba lagi",
+                );
+                return;
+            }
 
             // Store token to localstorage
-            localStorage.setItem("accessToken", result.data.accessToken);
-            localStorage.setItem("refreshToken", result.data.refreshToken);
+            localStorage.setItem("accessToken", response.data.accessToken);
+            localStorage.setItem("refreshToken", response.data.refreshToken);
 
             // Navigate to success page
             navigate("/auth/google-success");
@@ -62,7 +76,16 @@ export const Register = () => {
             console.error(error);
         } finally {
             setIsLoading(false);
+
+            window.close();
         }
+    };
+
+    // Handle close button
+    const handleCloseWindow = (e: MouseEvent) => {
+        e.preventDefault();
+
+        window.close();
     };
 
     return (
@@ -71,9 +94,9 @@ export const Register = () => {
                 <title>Register akun baru</title>
             </Helmet>
 
-            {searchParam.get("code") && (
+            {!error && (
                 <>
-                    <p className="text-sm text-muted-foreground text-center">
+                    <p className="text-center text-sm text-muted-foreground">
                         Kamu akun baru ya? Isikan ID Pegawai kamu ya 😄.
                     </p>
 
@@ -95,14 +118,14 @@ export const Register = () => {
                 </>
             )}
 
-            {!searchParam.get("code") && (
+            {error && (
                 <>
-                    <p className="text-sm text-red-400 text-center">
-                        Proses registrasi tidak valid.
+                    <p className="text-center text-sm text-red-400">
+                        Proses registrasi tidak valid. {error}
                     </p>
 
-                    <Button asChild>
-                        <Link to={"/"}>Kembali ke halaman awal</Link>
+                    <Button onClick={handleCloseWindow}>
+                        Kembali ke halaman awal
                     </Button>
                 </>
             )}

@@ -4,6 +4,8 @@ import { Helmet } from "react-helmet";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { fetcher } from "@/utils/fetch";
+import { TRedirectURI } from "../types/type.auth";
 
 interface ILoginResponse {
     success: boolean;
@@ -62,34 +64,32 @@ export const Login = () => {
             window.removeEventListener("message", handleMessage);
             cleanUp();
         };
-    }, []);
+    }, [cleanUp, navigate]);
 
     // Function
     const openWindow = async () => {
         setError(null);
 
         // Fetch backend to get google redirect URI
-        let result: any;
+        let result: TRedirectURI;
 
         try {
-            const response = await fetch(
-                "http://localhost:3001/api/auth/google/login-attempt",
+            const response = await fetcher<TRedirectURI>(
+                "auth/google/login-attempt",
+                "GET",
             );
 
-            // CHeck for error status
-            if (response.status !== 200) {
-                throw new Error("Percobaan login gagal, coba lagi");
-            }
-
-            result = await response.json();
-
             // CHeck for redirectUri
-            if (!result.data.redirectUrl) {
+            if (!response.data.redirectUrl) {
                 throw new Error("Percobaan login gagal, coba lagi");
             }
+
+            result = response.data;
         } catch (error) {
             setError(
-                error instanceof Error ? error.message : (error as string),
+                error instanceof Error
+                    ? error.message
+                    : "Percobaan login gagal. Coba lagi.",
             );
             return;
         }
@@ -98,7 +98,7 @@ export const Login = () => {
         if (!windowRef.current || windowRef.current.closed) {
             // Set windowRef from opened window
             windowRef.current = window.open(
-                result.data.redirectUrl, // Open backend google login redirect
+                result.redirectUrl, // Open backend google login redirect
                 "google-login",
                 "width=500,height=500",
             );
@@ -125,13 +125,13 @@ export const Login = () => {
                 <title>Welcome IT!</title>
             </Helmet>
 
-            <p className="text-sm text-muted-foreground text-center">
+            <p className="text-center text-sm text-muted-foreground">
                 Aplikasi ini hanya mendukung login menggunakan Google.
             </p>
 
             <Button
                 variant={"outline"}
-                className="rounded-3xl py-6 mt-4"
+                className="mt-4 rounded-3xl py-6"
                 disabled={loginState}
                 onClick={openWindow}
             >

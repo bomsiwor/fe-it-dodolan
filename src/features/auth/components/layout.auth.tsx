@@ -1,15 +1,9 @@
 import { BadgeAlert } from "lucide-react";
-import { PropsWithChildren, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { PropsWithChildren } from "react";
 
 export const AuthLayout = ({ children }: PropsWithChildren) => {
-    // Navigation
-    const navigate = useNavigate();
-
-    // Effect
-
     return (
-        <div className="p-6 flex flex-col gap-2 h-screen">
+        <div className="flex h-screen flex-col gap-2 p-6">
             <div className="my-8 flex justify-center">
                 <svg
                     width="249"
@@ -74,22 +68,22 @@ export const AuthLayout = ({ children }: PropsWithChildren) => {
             </div>
 
             <div className="text-center">
-                <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight lg:text-5xl ">
+                <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight lg:text-5xl">
                     Welcome, gais! 😱
                 </h3>
 
-                <p className="text-sm text-muted-foreground mt-2">
+                <p className="mt-2 text-sm text-muted-foreground">
                     Semoga hari kalian menyenangkan! Gunakan aplikasi ini dengan
                     bijak. Karena Tuhan maha melihat.
                 </p>
             </div>
 
-            <div className="h-[1px] bg-slate-300 my-8"></div>
+            <div className="my-8 h-[1px] bg-slate-300"></div>
 
             {children}
 
-            <div className="grow flex flex-col justify-end">
-                <div className="flex gap-2 items-center">
+            <div className="flex grow flex-col justify-end">
+                <div className="flex items-center gap-2">
                     <BadgeAlert />
                     <p className="text-sm text-muted-foreground">
                         Dengan kamu login, berarti sudah setuju dengan semua{" "}

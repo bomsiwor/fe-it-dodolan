@@ -13,4 +13,5 @@ export default defineConfig({
     server: {
         port: 8085,
     },
+    envPrefix: "DODOLAN_",
 });

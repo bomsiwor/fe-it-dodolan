@@ -1,17 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { AuthLayout } from "./layout.auth";
 import { Helmet } from "react-helmet";
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { fetcher } from "@/utils/fetch";
+import { ITokens } from "../types/type.auth";
 
 export const LoginAttempt = () => {
     // Navigation
     const navigate = useNavigate();
 
     // URL
-    const [searchParam, setSearchParam] = useSearchParams();
+    const [searchParam] = useSearchParams();
     const [error, setError] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     // State
     const origin = window.opener; // Reference to the original window
@@ -26,45 +27,35 @@ export const LoginAttempt = () => {
 
         const handleGetToken = async () => {
             try {
-                // Default success value is false
-                // succcessRef.current = false;
-                setIsLoading(true);
-
                 const payload = {
                     code: searchParam.get("code"),
                 };
 
-                const response = await fetch(
-                    "http://localhost:3001/api/auth/token-request",
+                const response = await fetcher<ITokens>(
+                    "auth/token-request",
+                    "POST",
                     {
-                        method: "POST",
-                        body: JSON.stringify(payload),
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
+                        body: payload,
                     },
                 );
 
-                // Check for response
-                if (response.status !== 200) {
-                    window.close();
-                }
-
-                // Add type
-                const result = await response.json();
-
                 // Check for token
-                if (!result.data?.accessToken || !result.data?.refreshToken) {
+                if (!response.data.accessToken || !response.data.refreshToken) {
                     window.close();
                 }
 
                 // Store token to localstorage
-                localStorage.setItem("accessToken", result.data?.accessToken);
-                localStorage.setItem("refreshToken", result.data?.refreshToken);
+                localStorage.setItem("accessToken", response.data.accessToken);
+                localStorage.setItem(
+                    "refreshToken",
+                    response.data.refreshToken,
+                );
 
                 // Navigate to success page
                 navigate("/auth/google-success");
             } catch (error) {
+                console.error(error);
+
                 window.close();
             }
         };
@@ -72,7 +63,7 @@ export const LoginAttempt = () => {
         handleGetToken();
 
         return () => {};
-    }, []);
+    }, [navigate, origin, searchParam]);
 
     // Function
 
@@ -82,13 +73,13 @@ export const LoginAttempt = () => {
                 <title>Proses login</title>
             </Helmet>
 
-            {searchParam.get("code") && (
-                <>{error && <p className="text-sm text-red-400">{error}</p>}</>
+            {searchParam.get("code") && error && (
+                <p className="text-sm text-red-400">{error}</p>
             )}
 
             {!searchParam.get("code") && (
                 <>
-                    <p className="text-sm text-red-400 text-center">
+                    <p className="text-center text-sm text-red-400">
                         Proses login tidak valid.
                     </p>
 
