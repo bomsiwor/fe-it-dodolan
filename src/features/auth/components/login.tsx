@@ -30,6 +30,7 @@ export const Login = () => {
         // set interval ID from ref after clearing
         if (checkIntervalRef.current !== null) {
             window.clearInterval(checkIntervalRef.current);
+
             checkIntervalRef.current = null;
         }
     }, []);
@@ -40,6 +41,7 @@ export const Login = () => {
         // Run for first time only
         if (localStorage.getItem("accessToken")) {
             navigate("/lobby");
+
             return;
         }
 
@@ -48,9 +50,7 @@ export const Login = () => {
             const data = e.data as ILoginResponse;
 
             // Set error if data is not success and giving error
-            if (data.success) {
-                console.log("success");
-            } else {
+            if (!data.success) {
                 setError(data.error || "Login gagal");
             }
 
@@ -64,7 +64,7 @@ export const Login = () => {
             window.removeEventListener("message", handleMessage);
             cleanUp();
         };
-    }, [cleanUp, navigate]);
+    }, [cleanUp]);
 
     // Function
     const openWindow = async () => {
