@@ -47,6 +47,10 @@ export const Login = () => {
 
         // Add event listener to listen message
         const handleMessage = (e: MessageEvent) => {
+            if (!windowRef.current) {
+                return;
+            }
+
             const data = e.data as ILoginResponse;
 
             // Set error if data is not success and giving error
@@ -110,7 +114,7 @@ export const Login = () => {
         // or user manually closed window.
         checkIntervalRef.current = window.setInterval(() => {
             // Check for window is closed or not exists
-            if (windowRef.current && windowRef.current.closed) {
+            if (!windowRef.current || windowRef.current?.closed) {
                 setError("Login gagal, jendela ditutup dini");
                 setLoginState(false);
 
@@ -141,7 +145,7 @@ export const Login = () => {
                     : "Lanjutkan dengan Google"}
             </Button>
 
-            <p className="text-sm text-red-400">{error}</p>
+            {error && <p className="text-sm text-red-400">{error}</p>}
         </AuthLayout>
     );
 };
