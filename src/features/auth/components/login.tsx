@@ -60,13 +60,11 @@ export const Login = () => {
 
         window.addEventListener("message", handleMessage);
 
-        console.info("");
-
         return () => {
             window.removeEventListener("message", handleMessage);
             cleanUp();
         };
-    }, [cleanUp]);
+    }, [cleanUp, navigate]);
 
     // Function
     const openWindow = async () => {
