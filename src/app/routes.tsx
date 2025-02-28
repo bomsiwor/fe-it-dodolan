@@ -2,6 +2,7 @@ import { GoogleRedirectPage } from "@/features/auth/components/google-login-succ
 import { Login } from "@/features/auth/components/login";
 import { LoginAttempt } from "@/features/auth/components/login-attempt";
 import { Register } from "@/features/auth/components/register";
+import { Balances } from "@/features/balances/components";
 import { createBrowserRouter } from "react-router-dom";
 
 const router = createBrowserRouter([
@@ -24,6 +25,10 @@ const router = createBrowserRouter([
     {
         path: "/lobby",
         element: <div>Sudah login ya</div>,
+    },
+    {
+        path: "/balances",
+        element: <Balances />,
     },
 ]);
 
